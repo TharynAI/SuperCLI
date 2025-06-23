@@ -211,6 +211,10 @@ const cli = meow(
         aliases: ["S"],
         description: "Directory to save session rollouts (default: ./_sessions; override with CODEX_SESSIONS_ROOT env var)",
       },
+      sessionName: {
+        type: "string",
+        description: "Name for this session (used in session file names)",
+      },
 
       // Experimental mode where whole directory is loaded in context and model is requested
       // to make code edits in a single pass.
@@ -304,7 +308,19 @@ let config = loadConfig(undefined, undefined, {
 // `prompt` can be updated later when the user resumes a previous session
 // via the `--history` flag. Therefore it must be declared with `let` rather
 // than `const`.
+// Determine prompt and optional sessionName from inputs/flags
 let prompt = cli.input[0];
+// Session name: either via --sessionName flag or first positional argument when two inputs provided
+const sessionNameFlag = cli.flags.sessionName as string | undefined;
+let sessionName = sessionNameFlag;
+if (!sessionName && cli.input.length > 1) {
+  sessionName = cli.input[0];
+  prompt = cli.input[1];
+}
+// Export session name for save-rollout
+if (sessionName) {
+  process.env["CODEX_SESSION_NAME"] = sessionName;
+}
 const model = cli.flags.model ?? config.model;
 const imagePaths = cli.flags.image;
 const provider = cli.flags.provider ?? config.provider ?? "openai";
