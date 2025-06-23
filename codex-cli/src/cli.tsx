@@ -206,11 +206,15 @@ const cli = meow(
         description:
           "Disable server-side response storage (sends full conversation context with every request)",
       },
+      // [2025-06-23 10:45] Purpose: allow overriding sessions directory via CLI
+      // Change: added --sessions-dir / -S flag
       sessionsDir: {
         type: "string",
         aliases: ["S"],
         description: "Directory to save session rollouts (default: ./_sessions; override with CODEX_SESSIONS_ROOT env var)",
       },
+      // [2025-06-23 10:45] Purpose: allow specifying human-readable session name via CLI
+      // Change: added --session-name flag
       sessionName: {
         type: "string",
         description: "Name for this session (used in session file names)",
@@ -305,6 +309,8 @@ let config = loadConfig(undefined, undefined, {
   }
 }
 
+// [2025-06-23 10:45] Purpose: parse prompt and sessionName from inputs/flags
+// Change: sessionName positional handling; set CODEX_SESSION_NAME env var
 // `prompt` can be updated later when the user resumes a previous session
 // via the `--history` flag. Therefore it must be declared with `let` rather
 // than `const`.

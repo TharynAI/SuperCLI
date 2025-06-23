@@ -7,11 +7,15 @@ import os from "os";
 import path from "path";
 
 const SESSIONS_ROOT = path.join(os.homedir(), ".codex", "sessions");
+// [2025-06-23 10:45] Purpose: default local sessions folder relative to project root
+// Change: introduced PROJECT_SESSIONS_ROOT to store rollouts in './_sessions'
 // Default project-local sessions directory
 const PROJECT_SESSIONS_ROOT = path.resolve(process.cwd(), "_sessions");
 
 /**
  * Determine the directory to save session rollouts:
+ * [2025-06-23 10:45] Purpose: support override of sessions directory
+ * Change: implemented getSessionsRoot() using CODEX_SESSIONS_ROOT or PROJECT_SESSIONS_ROOT
  * 1. CODEX_SESSIONS_ROOT env var
  * 2. project-local './_sessions'
  * 3. fallback to home directory (~/.codex/sessions)
@@ -24,6 +28,8 @@ export function getSessionsRoot(): string {
   return PROJECT_SESSIONS_ROOT;
 }
 
+// [2025-06-23 10:45] Purpose: prevent multiple session files per run
+// Change: introduced SESSION_FILENAME_CACHE to reuse filename for the session
 // Cache filenames per session to avoid creating multiple files
 const SESSION_FILENAME_CACHE: Record<string, string> = {};
 /**
@@ -47,9 +53,13 @@ async function saveRolloutAsync(
       // best-effort fallback; if this also fails, writeFile below will error
     }
   }
+  // [2025-06-23 10:45] Purpose: include timestamp for session metadata
+  // Change: moved timestamp declaration outside filename logic
   // Timestamp for inclusion in JSON payload
   const timestamp = new Date().toISOString();
 
+  // [2025-06-23 10:45] Purpose: build session filename using branch and session name
+  // Change: updated filename logic to prefix with CODEX_SESSION_BRANCH
   // Determine filename once per session, caching to avoid multiple files
   let filename = SESSION_FILENAME_CACHE[sessionId];
   if (!filename) {
