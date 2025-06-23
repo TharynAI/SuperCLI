@@ -23,6 +23,15 @@ pub struct Cli {
     #[arg(long = "full-auto", default_value_t = false)]
     pub full_auto: bool,
 
+    /// Allow outbound network access within sandboxed commands (adds `network-full-access`).
+    #[arg(long = "allow-network", short = 'N', default_value_t = false)]
+    pub allow_network: bool,
+    // ---------------------------------------------------------------------
+    // [2025-06-23 14:30] Purpose: expose network toggle for non-interactive
+    // `codex exec` flow.
+    // Change : Added flag mirroring TUI variant.
+    // ---------------------------------------------------------------------
+
     #[clap(flatten)]
     pub sandbox: SandboxPermissionOption,
 

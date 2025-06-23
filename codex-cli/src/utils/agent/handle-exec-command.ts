@@ -138,10 +138,17 @@ export async function handleExecCommand(
   }
 
   const { applyPatch } = safety;
+  // -----------------------------------------------------------------------
+  // [2025-06-23 14:30] Purpose: Respect AppConfig.allowNetwork toggle.
+  // Change : When true, force `runInSandbox` → false so commands run without
+  //          the network-disabled sandbox.
+  // -----------------------------------------------------------------------
+  const effectiveRunInSandbox = config.allowNetwork ? false : runInSandbox;
+
   const summary = await execCommand(
     args,
     applyPatch,
-    runInSandbox,
+    effectiveRunInSandbox,
     additionalWritableRoots,
     config,
     abortSignal,

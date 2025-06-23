@@ -194,6 +194,42 @@ impl SandboxPolicy {
             .any(|perm| matches!(perm, SandboxPermission::NetworkFullAccess))
     }
 
+    /// Return a clone of this policy with `NetworkFullAccess` permission ensured.
+    pub fn with_network_full_access(mut self) -> Self {
+        // -------------------------------------------------------------------
+        // [2025-06-23 14:30] Purpose: helper used by CLI flag `--allow-network`
+        // Change : Ensures `NetworkFullAccess` is present in the permission
+        //          set without mutating callers’ original instance.
+        // -------------------------------------------------------------------
+        if !self.has_full_network_access() {
+            self.permissions.push(SandboxPermission::NetworkFullAccess);
+        }
+        self
+    }
+
+    /// Iterator over the contained permissions. Provided for testing and
+    /// diagnostic purposes.
+    pub fn permissions(&self) -> impl Iterator<Item = &SandboxPermission> {
+        // [2025-06-23 14:30] Diagnostic accessor – allows tests to inspect
+        // internal permission vector without granting &mut.
+        self.permissions.iter()
+    }
+
+    /// Convenience helper: read-only disk but unrestricted network.
+    pub fn new_network_only_policy() -> Self {
+        // -------------------------------------------------------------------
+        // [2025-06-23 14:30] Purpose: Convenience for tests / future use –
+        // read-only disk + full network.
+        // Change : New associated constructor.
+        // -------------------------------------------------------------------
+        Self {
+            permissions: vec![
+                SandboxPermission::DiskFullReadAccess,
+                SandboxPermission::NetworkFullAccess,
+            ],
+        }
+    }
+
     pub fn get_writable_roots_with_cwd(&self, cwd: &Path) -> Vec<PathBuf> {
         let mut writable_roots = Vec::<PathBuf>::new();
         for perm in &self.permissions {

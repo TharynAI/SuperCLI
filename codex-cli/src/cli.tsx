@@ -94,6 +94,8 @@ const cli = meow(
     --full-stdout              Do not truncate stdout/stderr from command outputs
     --notify                   Enable desktop notifications for responses
 
+    -N, --allow-network        Do NOT disable network inside sandbox (runs commands with full network access)
+
     --disable-response-storage Disable server‑side response storage (sends the
                                full conversation context with every request)
 
@@ -205,6 +207,20 @@ const cli = meow(
           "Disable server-side response storage (sends full conversation context with every request)",
       },
 
+      // Network sandbox toggle
+      allowNetwork: {
+        type: "boolean",
+        aliases: ["N"],
+        description:
+          // ------------------------------------------------------------------
+          // [2025-06-23 14:30]  Purpose: Introduce global opt-out flag for the
+          // sandbox’s network block. When set, the CLI launches with full
+          // network access for shell commands.
+          // Change : Added `--allow-network / -N` boolean flag.
+          // ------------------------------------------------------------------
+          "Spawn shell tool calls without the network-disabled sandbox (full network access). USE WITH CAUTION.",
+      },
+
       // Experimental mode where whole directory is loaded in context and model is requested
       // to make code edits in a single pass.
       fullContext: {
@@ -284,6 +300,19 @@ let config = loadConfig(undefined, undefined, {
   projectDocPath: cli.flags.projectDoc,
   isFullContext: fullContextMode,
 });
+
+// ---------------------------------------------------------------------------
+// Network sandbox toggle – merge CLI flag into runtime config (non-persistent)
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// [2025-06-23 14:30] Purpose: Store --allow-network flag in runtime config so
+// that downstream layers (agent loop, Rust bridge) can react.
+// Change : Adds `allowNetwork` boolean to AppConfig when flag present.
+// ---------------------------------------------------------------------------
+if (cli.flags.allowNetwork) {
+  config = { ...config, allowNetwork: true };
+}
 
 // `prompt` can be updated later when the user resumes a previous session
 // via the `--history` flag. Therefore it must be declared with `let` rather

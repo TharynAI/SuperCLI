@@ -30,6 +30,15 @@ pub struct Cli {
     #[arg(long = "full-auto", default_value_t = false)]
     pub full_auto: bool,
 
+    /// Allow outbound network access for shell commands executed by the agent.
+    /// Equivalent to adding the `network-full-access` sandbox permission.
+    #[arg(long = "allow-network", short = 'N', default_value_t = false)]
+    pub allow_network: bool,
+    // ---------------------------------------------------------------------
+    // [2025-06-23 14:30] Purpose: surface network sandbox toggle in Rust TUI.
+    // Change : New boolean flag (`-N` / `--allow-network`).
+    // ---------------------------------------------------------------------
+
     #[clap(flatten)]
     pub sandbox: SandboxPermissionOption,
 

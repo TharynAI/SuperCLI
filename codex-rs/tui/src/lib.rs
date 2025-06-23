@@ -46,15 +46,36 @@ mod user_approval_widget;
 pub use cli::Cli;
 
 pub fn run_main(cli: Cli, codex_linux_sandbox_exe: Option<PathBuf>) -> std::io::Result<()> {
-    let (sandbox_policy, approval_policy) = if cli.full_auto {
-        (
-            Some(SandboxPolicy::new_full_auto_policy()),
-            Some(AskForApproval::OnFailure),
+    // Derive sandbox + approval policies based on CLI flags.
+    // ---------------------------------------------------------------------
+    // [2025-06-23 14:30] Purpose: integrate `--allow-network` into sandbox
+    // policy calculation.
+    // Change : Refactored logic to start from `base_sandbox` and conditionally
+    //           add `NetworkFullAccess` permission.
+    // ---------------------------------------------------------------------
+    let base_sandbox = if cli.full_auto {
+        Some(SandboxPolicy::new_full_auto_policy())
+    } else {
+        cli.sandbox.permissions.clone().map(Into::into)
+    };
+
+    let sandbox_with_network = if cli.allow_network {
+        Some(
+            base_sandbox
+                .unwrap_or_else(SandboxPolicy::new_read_only_policy)
+                .with_network_full_access(),
         )
     } else {
-        let sandbox_policy = cli.sandbox.permissions.clone().map(Into::into);
-        (sandbox_policy, cli.approval_policy.map(Into::into))
+        base_sandbox
     };
+
+    let approval_policy = if cli.full_auto {
+        Some(AskForApproval::OnFailure)
+    } else {
+        cli.approval_policy.map(Into::into)
+    };
+
+    let sandbox_policy = sandbox_with_network;
 
     let config = {
         // Load configuration and support CLI overrides.

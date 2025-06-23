@@ -31,6 +31,7 @@ pub async fn run_main(cli: Cli, codex_linux_sandbox_exe: Option<PathBuf>) -> any
         model,
         config_profile,
         full_auto,
+        allow_network,
         sandbox,
         cwd,
         skip_git_repo_check,
@@ -84,10 +85,25 @@ pub async fn run_main(cli: Cli, codex_linux_sandbox_exe: Option<PathBuf>) -> any
         ),
     };
 
-    let sandbox_policy = if full_auto {
+    // ---------------------------------------------------------------------
+    // [2025-06-23 14:30] Purpose: Apply network toggle to sandbox policy for
+    // non-interactive exec path.
+    // Change : Build `base_sandbox` then optionally add network permission.
+    // ---------------------------------------------------------------------
+    let base_sandbox = if full_auto {
         Some(SandboxPolicy::new_full_auto_policy())
     } else {
         sandbox.permissions.clone().map(Into::into)
+    };
+
+    let sandbox_policy = if allow_network {
+        Some(
+            base_sandbox
+                .unwrap_or_else(SandboxPolicy::new_read_only_policy)
+                .with_network_full_access(),
+        )
+    } else {
+        base_sandbox
     };
 
     // Load configuration and determine approval policy

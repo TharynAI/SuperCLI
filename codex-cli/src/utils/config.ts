@@ -215,6 +215,14 @@ export type AppConfig = {
     };
   };
   fileOpener?: FileOpenerScheme;
+
+  /** When true, shell tool calls will run without the network-disabled sandbox. */
+  // ---------------------------------------------------------------------------
+  // [2025-06-23 14:30] Purpose: record CLI opt-out from network-disabled
+  // sandbox. Not persisted to disk; session-only.
+  // Change : Added `allowNetwork` optional boolean.
+  // ---------------------------------------------------------------------------
+  allowNetwork?: boolean;
 };
 
 // Formatting (quiet mode-only).
