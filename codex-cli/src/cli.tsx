@@ -97,6 +97,8 @@ const cli = meow(
     --disable-response-storage Disable server‑side response storage (sends the
                                full conversation context with every request)
 
+    -S, --sessions-dir <path>      Directory to save session rollouts (default: ./_sessions; override with CODEX_SESSIONS_ROOT env var)
+
     --flex-mode               Use "flex-mode" processing mode for the request (only supported
                               with models o3 and o4-mini)
 
@@ -204,6 +206,11 @@ const cli = meow(
         description:
           "Disable server-side response storage (sends full conversation context with every request)",
       },
+      sessionsDir: {
+        type: "string",
+        aliases: ["S"],
+        description: "Directory to save session rollouts (default: ./_sessions; override with CODEX_SESSIONS_ROOT env var)",
+      },
 
       // Experimental mode where whole directory is loaded in context and model is requested
       // to make code edits in a single pass.
@@ -284,6 +291,15 @@ let config = loadConfig(undefined, undefined, {
   projectDocPath: cli.flags.projectDoc,
   isFullContext: fullContextMode,
 });
+// Sessions directory override: env var takes precedence over CLI flag
+{
+  const sessionsDirEnv = process.env["CODEX_SESSIONS_ROOT"];
+  const sessionsDirFlag = cli.flags.sessionsDir;
+  config.sessionsDir = sessionsDirEnv ?? sessionsDirFlag;
+  if (sessionsDirFlag) {
+    process.env["CODEX_SESSIONS_ROOT"] = sessionsDirFlag;
+  }
+}
 
 // `prompt` can be updated later when the user resumes a previous session
 // via the `--history` flag. Therefore it must be declared with `let` rather

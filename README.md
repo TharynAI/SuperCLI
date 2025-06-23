@@ -222,7 +222,7 @@ The hardening mechanism Codex uses depends on your OS:
 | `codex -q "..."`                     | Non-interactive "quiet mode"        | `codex -q --json "explain utils.ts"` |
 | `codex completion <bash\|zsh\|fish>` | Print shell completion script       | `codex completion bash`              |
 
-Key flags: `--model/-m`, `--approval-mode/-a`, `--quiet/-q`, and `--notify`.
+Key flags: `--model/-m`, `--approval-mode/-a`, `--quiet/-q`, `--notify`, and `--sessions-dir/-S`.
 
 ---
 
@@ -475,6 +475,10 @@ export AZURE_OPENAI_API_VERSION="2025-03-01-preview" (Optional)
 export OPENROUTER_API_KEY="your-openrouter-key-here"
 
 # Similarly for other providers
+```
+You can also override the sessions directory used by the CLI:
+```bash
+export CODEX_SESSIONS_ROOT="./my_sessions"  # custom sessions folder
 ```
 
 ---
