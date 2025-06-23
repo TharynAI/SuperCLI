@@ -47,21 +47,17 @@ async function saveRolloutAsync(
       // best-effort fallback; if this also fails, writeFile below will error
     }
   }
-  // Generate a timestamp for this session write
+  // Timestamp for inclusion in JSON payload
   const timestamp = new Date().toISOString();
 
   // Determine filename once per session, caching to avoid multiple files
   let filename = SESSION_FILENAME_CACHE[sessionId];
   if (!filename) {
-    // Split ISO timestamp into date and time parts
-    const [datePart, timePartZ] = timestamp.split('T');
-    const [timePart] = timePartZ.split('Z');
-    const timeSafe = timePart.split('.')[0].replace(/:/g, '-');
     const rawName = process.env["CODEX_SESSION_NAME"];
     const nameSafe = rawName
       ? rawName.trim().replace(/[^a-zA-Z0-9_-]/g, '_')
       : sessionId;
-    filename = `Session-${datePart}-${timeSafe}-${nameSafe}.json`;
+    filename = `Session-${nameSafe}.json`;
     SESSION_FILENAME_CACHE[sessionId] = filename;
   }
   const filePath = path.join(root, filename);
