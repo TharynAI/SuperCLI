@@ -53,11 +53,19 @@ async function saveRolloutAsync(
   // Determine filename once per session, caching to avoid multiple files
   let filename = SESSION_FILENAME_CACHE[sessionId];
   if (!filename) {
+    // Clean session name
     const rawName = process.env["CODEX_SESSION_NAME"];
     const nameSafe = rawName
       ? rawName.trim().replace(/[^a-zA-Z0-9_-]/g, '_')
       : sessionId;
-    filename = `Session-${nameSafe}.json`;
+    // Include branch name if available
+    const rawBranch = process.env["CODEX_SESSION_BRANCH"];
+    const branchSafe = rawBranch
+      ? rawBranch.trim().replace(/[^a-zA-Z0-9_-]/g, '_')
+      : '';
+    filename = branchSafe
+      ? `${branchSafe}-${nameSafe}.json`
+      : `${nameSafe}.json`;
     SESSION_FILENAME_CACHE[sessionId] = filename;
   }
   const filePath = path.join(root, filename);
