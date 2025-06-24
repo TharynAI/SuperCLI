@@ -308,6 +308,8 @@ export default function TerminalChat({
     forceUpdate();
 
     log(`AgentLoop created: ${inspect(agentRef.current, { depth: 1 })}`);
+    // Seed initial session file (empty items) on first prompt submission
+    saveRollout(sessionId, []);
 
     return () => {
       log("terminating AgentLoop");

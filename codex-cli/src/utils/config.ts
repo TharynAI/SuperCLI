@@ -215,6 +215,11 @@ export type AppConfig = {
     };
   };
   fileOpener?: FileOpenerScheme;
+  /**
+   * Directory where session rollouts are stored. May be set via
+   * CODEX_SESSIONS_ROOT env var or CLI flag (--sessions-dir).
+   */
+  sessionsDir?: string;
 };
 
 // Formatting (quiet mode-only).

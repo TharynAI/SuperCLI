@@ -97,6 +97,8 @@ const cli = meow(
     --disable-response-storage Disable server‑side response storage (sends the
                                full conversation context with every request)
 
+    -S, --sessions-dir <path>      Directory to save session rollouts (default: ./_sessions; override with CODEX_SESSIONS_ROOT env var)
+
     --flex-mode               Use "flex-mode" processing mode for the request (only supported
                               with models o3 and o4-mini)
 
@@ -204,6 +206,19 @@ const cli = meow(
         description:
           "Disable server-side response storage (sends full conversation context with every request)",
       },
+      // [2025-06-23 10:45] Purpose: allow overriding sessions directory via CLI
+      // Change: added --sessions-dir / -S flag
+      sessionsDir: {
+        type: "string",
+        aliases: ["S"],
+        description: "Directory to save session rollouts (default: ./_sessions; override with CODEX_SESSIONS_ROOT env var)",
+      },
+      // [2025-06-23 10:45] Purpose: allow specifying human-readable session name via CLI
+      // Change: added --session-name flag
+      sessionName: {
+        type: "string",
+        description: "Name for this session (used in session file names)",
+      },
 
       // Experimental mode where whole directory is loaded in context and model is requested
       // to make code edits in a single pass.
@@ -284,11 +299,34 @@ let config = loadConfig(undefined, undefined, {
   projectDocPath: cli.flags.projectDoc,
   isFullContext: fullContextMode,
 });
+// Sessions directory override: env var takes precedence over CLI flag
+{
+  const sessionsDirEnv = process.env["CODEX_SESSIONS_ROOT"];
+  const sessionsDirFlag = cli.flags.sessionsDir;
+  config.sessionsDir = sessionsDirEnv ?? sessionsDirFlag;
+  if (sessionsDirFlag) {
+    process.env["CODEX_SESSIONS_ROOT"] = sessionsDirFlag;
+  }
+}
 
+// [2025-06-23 10:45] Purpose: parse prompt and sessionName from inputs/flags
+// Change: sessionName positional handling; set CODEX_SESSION_NAME env var
 // `prompt` can be updated later when the user resumes a previous session
 // via the `--history` flag. Therefore it must be declared with `let` rather
 // than `const`.
+// Determine prompt and optional sessionName from inputs/flags
 let prompt = cli.input[0];
+// Session name: either via --sessionName flag or first positional argument when two inputs provided
+const sessionNameFlag = cli.flags.sessionName as string | undefined;
+let sessionName = sessionNameFlag;
+if (!sessionName && cli.input.length > 1) {
+  sessionName = cli.input[0];
+  prompt = cli.input[1];
+}
+// Export session name for save-rollout
+if (sessionName) {
+  process.env["CODEX_SESSION_NAME"] = sessionName;
+}
 const model = cli.flags.model ?? config.model;
 const imagePaths = cli.flags.image;
 const provider = cli.flags.provider ?? config.provider ?? "openai";
